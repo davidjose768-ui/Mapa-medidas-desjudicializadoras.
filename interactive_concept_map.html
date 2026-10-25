@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa Conceptual Interactivo - Medidas Desjudicializadoras en Honduras</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            800: '#3730a3',
+                            900: '#312e81',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.05);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.4);
+            border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.7);
+        }
+        .card-glow {
+            box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.1), 0 8px 10px -6px rgba(99, 102, 241, 0.1);
+        }
+        .node-active {
+            ring: 3px;
+            ring-color: #6366f1;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+
+    <!-- Navigation Header -->
+    <header class="bg-slate-800/80 backdrop-blur-md border-b border-slate-700/60 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
+                    <i class="fa-solid font-bold fa-scale-balanced text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold bg-gradient-to-r from-white via-slate-200 to-indigo-200 bg-clip-text text-transparent">
+                        Medidas Desjudicializadoras
+                    </h1>
+                    <p class="text-xs text-indigo-400 font-medium">Código Procesal Penal de Honduras (Dec. 9-99-E)</p>
+                </div>
+            </div>
+
+            <!-- Tab Switcher -->
+            <div class="flex bg-slate-900/80 p-1 rounded-xl border border-slate-700/80">
+                <button id="tab-co" onclick="switchSection('co')" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center space-x-2 bg-indigo-600 text-white shadow-md">
+                    <i class="fa-solid fa-gavel"></i>
+                    <span class="hidden sm:inline">Criterio de Oportunidad</span>
+                    <span class="sm:hidden">Criterio</span>
+                </button>
+                <button id="tab-spp" onclick="switchSection('spp')" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-400 hover:text-white transition-all duration-200 flex items-center space-x-2">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span class="hidden sm:inline">Suspensión Condicional</span>
+                    <span class="sm:hidden">Suspensión</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col lg:flex-row gap-6">
+
+        <!-- Left Column: Interactive Map Nodes Navigator -->
+        <div class="lg:w-7/12 flex flex-col gap-4">
+
+            <!-- Search & Filter Controls -->
+            <div class="bg-slate-800/60 backdrop-blur-sm border border-slate-700/60 rounded-2xl p-4 flex flex-col sm:flex-row gap-3 items-center justify-between">
+                <div class="relative w-full sm:w-72">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                    <input type="text" id="searchInput" oninput="filterNodes()" placeholder="Buscar conceptos o artículos..." 
+                           class="w-full bg-slate-900/90 border border-slate-700 rounded-xl pl-10 pr-4 py-2 text-xs sm:text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all">
+                </div>
+                <div class="flex items-center space-x-2 text-xs text-slate-400 w-full sm:w-auto justify-end">
+                    <span>Selecciona un tema para explorar</span>
+                </div>
+            </div>
+
+            <!-- Interactive Visual Nodes Canvas -->
+            <div id="nodesContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 custom-scrollbar overflow-y-auto max-h-[calc(100vh-230px)] pr-1">
+                <!-- Dynamic Nodes JavaScript Injection -->
+            </div>
+        </div>
+
+        <!-- Right Column: Interactive Detail & Expanded Inspector Panel -->
+        <div class="lg:w-5/12">
+            <div class="sticky top-22 bg-slate-800/80 border border-slate-700/80 rounded-2xl p-6 shadow-2xl flex flex-col min-h-[500px] justify-between">
+                <div>
+                    <!-- Category Badge -->
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                            <i class="fa-solid fa-circle-info"></i>
+                            <span id="detailCategory">Selecciona un elemento</span> • <span id="detailArticle">Art.</span>
+                        </span>
+                        <span id="detailIcon" class="text-2xl text-indigo-400">
+                            <i class="fa-solid fa-book-bookmark"></i>
+                        </span>
+                    </div>
+
+                    <!-- Title -->
+                    <h2 id="detailTitle" class="text-xl sm:text-2xl font-bold text-white mb-3">
+                        Explorador Legal Interactivo
+                    </h2>
+
+                    <!-- Body Content -->
+                    <div id="detailContent" class="text-slate-300 text-sm leading-relaxed space-y-4">
+                        <p class="text-slate-400 italic">
+                            Haz clic en cualquiera de las tarjetas de la izquierda para desplegar el análisis legal completo, supuestos de procedencia, reglas de trámite, términos temporales y articulado del Código Procesal Penal.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Footer Summary Box in Panel -->
+                <div id="detailFooter" class="mt-6 pt-4 border-t border-slate-700/60 bg-slate-900/40 -mx-6 -mb-6 p-6 rounded-b-2xl">
+                    <div class="flex items-start space-x-3">
+                        <i class="fa-solid fa-shield-halved text-indigo-400 mt-1"></i>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            <strong class="text-slate-200">Garantía Constitucional:</strong> Las medidas desjudicializadoras buscan agilizar la justicia penal sin vulnerar los derechos fundamentales de la víctima e imputado.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 border-t border-slate-800 py-4 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500">
+            <p>Sistema de Consulta Procesal Penal de Honduras • Ley N° 9-99-E</p>
+        </div>
+    </footer>
+
+    <!-- Interactive Data & Script Application Logic -->
+    <script>
+        // Data Structure for Criterio de Oportunidad & Suspensión Condicional
+        const data = {
+            co: [
+                {
+                    id: "co-concepto",
+                    category: "Concepto Jurídico",
+                    title: "Concepto y Naturaleza",
+                    article: "Art. 28",
+                    icon: "fa-book-open",
+                    summary: "Facultad del Ministerio Público para abstenerse total o parcialmente del ejercicio de la acción penal.",
+                    details: `
+                        <p>El <strong>Criterio de Oportunidad</strong> es la facultad legal otorgada al Ministerio Público para abstenerse, total o parcialmente, del ejercicio de la acción penal pública o suspenderla/ceñirla a una de las personas que participaron en el hecho.</p>
+                        <div class="bg-indigo-950/40 border-l-4 border-indigo-500 p-3 rounded-r-lg my-3">
+                            <p class="text-xs text-indigo-200 font-medium"><strong>Finalidad:</strong> Descongestionamiento judicial y simplificación procesal cuando el interés público no se ve gravemente comprometido.</p>
+                        </div>
+                    `,
+                    footer: "Aplica de manera razonada y fundamentada bajo estándares de política criminal."
+                },
+                {
+                    id: "co-supuestos",
+                    category: "Casos de Procedencia",
+                    title: "Supuestos Legales de Aplicación",
+                    article: "Art. 28 Num. 1 - 5",
+                    icon: "fa-list-check",
+                    summary: "Cinco causales específicas: penas menores, evitar efectos, pena natural, insignificancia y colaboración.",
+                    details: `
+                        <p class="font-semibold text-indigo-300 mb-2">Causales Taxativas (Art. 28):</p>
+                        <ul class="space-y-2 text-xs sm:text-sm">
+                            <li class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/50"><strong>1. Bagatela / Poca Gravedad:</strong> Delitos con pena máxima no superior a 5 años, con afectación mínima al interés público y sin peligrosidad demostrada.</li>
+                            <li class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/50"><strong>2. Evitar efectos del delito:</strong> Cuando el imputado haya realizado esfuerzos idóneos para impedir las consecuencias del hecho.</li>
+                            <li class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/50"><strong>3. Pena Natural:</strong> En delitos culposos, si el imputado sufriere un daño físico o moral grave como consecuencia directa del delito.</li>
+                            <li class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/50"><strong>4. Pena Insignificante:</strong> Si la pena a imponer carece de importancia frente a otra ya impuesta o aplicable en proceso conexo.</li>
+                            <li class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/50"><strong>5. Colaboración Eficaz:</strong> En crimen organizado o delitos graves, brindar información valiosa para desarticular bandas o aportar pruebas decisivas.</li>
+                        </ul>
+                    `,
+                    footer: "Cada causal requiere fundamentación específica en la resolución fiscal."
+                },
+                {
+                    id: "co-procedimiento",
+                    category: "Trámite Procesal",
+                    title: "Procedimiento y Autorización",
+                    article: "Art. 29 y 30",
+                    icon: "fa-diagram-project",
+                    summary: "Autorización del Fiscal General, audiencia previa a la víctima y archivo administrativo.",
+                    details: `
+                        <ol class="space-y-3 relative border-l border-indigo-500/30 ml-3 pl-4">
+                            <li class="relative">
+                                <div class="font-semibold text-indigo-300">1. Autorización Superior</div>
+                                <p class="text-xs text-slate-300">Requiere aprobación expresa del Fiscal General de la República (quien puede delegar, excepto en casos de Colaboración Eficaz).</p>
+                            </li>
+                            <li class="relative">
+                                <div class="font-semibold text-indigo-300">2. Audiencia con la Víctima</div>
+                                <p class="text-xs text-slate-300">Se debe escuchar previamente a la víctima u ofendido sobre la decisión proyectada y el acuerdo reparatorio.</p>
+                            </li>
+                            <li class="relative">
+                                <div class="font-semibold text-indigo-300">3. Archivo Administrativo</div>
+                                <p class="text-xs text-slate-300">Aprobado el criterio, se notifica y el MP dispone el archivo administrativo de las diligencias.</p>
+                            </li>
+                        </ol>
+                    `,
+                    footer: "El archivo no extingue definitivamente la acción hasta cumplirse las condiciones."
+                },
+                {
+                    id: "co-impugnacion",
+                    category: "Control Judicial",
+                    title: "Impugnación por la Víctima",
+                    article: "Art. 32, 33 y 34",
+                    icon: "fa-scale-unbalanced-flip",
+                    summary: "Oposición ante el Juez de Letras y la figura de la Conversión de la Acción.",
+                    details: `
+                        <p class="mb-2">Si la víctima no está de acuerdo con el archivo dispuesto por el Ministerio Público:</p>
+                        <div class="space-y-2">
+                            <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-700">
+                                <span class="text-xs font-bold text-amber-400 block mb-1">PLAZO DE IMPUGNACIÓN (Art. 32)</span>
+                                <p class="text-xs">Tiene <strong>5 días hábiles</strong> tras la notificación para acudir al Juez de Letras competentemente.</p>
+                            </div>
+                            <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-700">
+                                <span class="text-xs font-bold text-emerald-400 block mb-1">CONVERSIÓN DE LA ACCIÓN (Art. 34)</span>
+                                <p class="text-xs">Si el Juez ratifica el criterio de oportunidad, la víctima tiene <strong>45 días hábiles</strong> para asumir la persecución penal como querellante privado. De lo contrario, se extingue la acción.</p>
+                            </div>
+                        </div>
+                    `,
+                    footer: "Garantiza la tutela judicial efectiva de las víctimas de delitos."
+                },
+                {
+                    id: "co-requisitos",
+                    category: "Condiciones",
+                    title: "Requisitos de Reparación y Prohibiciones",
+                    article: "Art. 29 y 35",
+                    icon: "fa-handshake",
+                    summary: "Exigencia de reparación del daño y garantía absoluta de no coacción de confesiones.",
+                    details: `
+                        <div class="space-y-3">
+                            <div class="bg-indigo-950/30 p-3 rounded-xl border border-indigo-500/20">
+                                <h4 class="font-semibold text-indigo-300 text-xs uppercase tracking-wider mb-1">Reparación del Daño (Art. 29)</h4>
+                                <p class="text-xs text-slate-300">Es condición indispensable que el imputado haya reparado el daño causado a la víctima o formalizado un acuerdo reparatorio satisfactorio a satisfacción de las partes.</p>
+                            </div>
+                            <div class="bg-rose-950/30 p-3 rounded-xl border border-rose-500/20">
+                                <h4 class="font-semibold text-rose-300 text-xs uppercase tracking-wider mb-1">Prohibición de Coacción (Art. 35)</h4>
+                                <p class="text-xs text-slate-300">Bajo ninguna circunstancia la aplicación del Criterio de Oportunidad podrá ser utilizada como mecanismo coactivo para obtener la confesión del imputado.</p>
+                            </div>
+                        </div>
+                    `,
+                    footer: "Resguardo del principio procesal de no autoincriminación."
+                }
+            ],
+            spp: [
+                {
+                    id: "spp-concepto",
+                    category: "Concepto Jurídico",
+                    title: "Concepto y Naturaleza",
+                    article: "Art. 36",
+                    icon: "fa-pause-circle",
+                    summary: "Suspensión del curso de la causa bajo el cumplimiento de condiciones y reglas de conducta.",
+                    details: `
+                        <p>La <strong>Suspensión Condicional de la Persecución Penal</strong> es un instituto procesal que permite pausar la tramitación del juicio seguido contra un imputado, sometiéndolo a un periodo de prueba y reglas de conducta impuestas por el Juez de Letras.</p>
+                        <div class="bg-emerald-950/30 border-l-4 border-emerald-500 p-3 rounded-r-lg my-3">
+                            <p class="text-xs text-emerald-200 font-medium"><strong>Efecto principal:</strong> Cumplidas exitosamente las condiciones impuestas durante el plazo, se extingue definitivamente la acción penal.</p>
+                        </div>
+                    `,
+                    footer: "Evita los efectos estigmatizantes del proceso y la pena privativa de libertad."
+                },
+                {
+                    id: "spp-fundamento",
+                    category: "Condiciones de Procedencia",
+                    title: "Requisitos de Admisibilidad",
+                    article: "Art. 36",
+                    icon: "fa-clipboard-check",
+                    summary: "Pena media ≤ 6 años, ausencia de condenas previas y baja peligrosidad del imputado.",
+                    details: `
+                        <p class="font-semibold text-emerald-300 mb-2">Concurrencia de Requisitos Legales:</p>
+                        <div class="grid grid-cols-1 gap-2 text-xs">
+                            <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-700/60 flex items-start space-x-2">
+                                <i class="fa-solid fa-scale-balanced text-emerald-400 mt-0.5"></i>
+                                <span><strong>Término Medio de la Pena:</strong> El término medio de la pena privativa de libertad del delito no debe exceder de <strong>6 años</strong>.</span>
+                            </div>
+                            <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-700/60 flex items-start space-x-2">
+                                <i class="fa-solid fa-user-shield text-emerald-400 mt-0.5"></i>
+                                <span><strong>Sin Condenas Anteriores:</strong> Que el imputado no haya sido condenado previamente por delito o falta.</span>
+                            </div>
+                            <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-700/60 flex items-start space-x-2">
+                                <i class="fa-solid fa-heart-pulse text-emerald-400 mt-0.5"></i>
+                                <span><strong>Ausencia de Peligrosidad:</strong> La naturaleza del hecho y los antecedentes del sujeto demuestren falta de peligrosidad social.</span>
+                            </div>
+                        </div>
+                    `,
+                    footer: "Requiere solicitud expresa del Ministerio Público antes del auto de apertura a juicio."
+                },
+                {
+                    id: "spp-medidas",
+                    category: "Reglas de Conducta",
+                    title: "Medidas Impuestas por el Juez",
+                    article: "Art. 37",
+                    icon: "fa-list-ol",
+                    summary: "Catálogo de obligaciones y prohibiciones durante el período de prueba.",
+                    details: `
+                        <p class="text-xs text-slate-300 mb-2">El Juez fijará motivadamente una o varias de las siguientes obligaciones:</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                            <div class="bg-slate-900/80 p-2 rounded border border-slate-700"><i class="fa-solid fa-house text-indigo-400 mr-1.5"></i> Residir en lugar determinado</div>
+                            <div class="bg-slate-900/80 p-2 rounded border border-slate-700"><i class="fa-solid fa-ban-smoking text-indigo-400 mr-1.5"></i> Abstenerse de drogas/alcohol</div>
+                            <div class="bg-slate-900/80 p-2 rounded border border-slate-700"><i class="fa-solid fa-graduation-cap text-indigo-400 mr-1.5"></i> Cursos o capacitación profesional</div>
+                            <div class="bg-slate-900/80 p-2 rounded border border-slate-700"><i class="fa-solid fa-hands-holding-child text-indigo-400 mr-1.5"></i> Trabajos de utilidad pública</div>
+                            <div class="bg-slate-900/80 p-2 rounded border border-slate-700"><i class="fa-solid fa-plane-slash text-indigo-400 mr-1.5"></i> Prohibición de salir del país</div>
+                            <div class="bg-slate-900/80 p-2 rounded border border-slate-700"><i class="fa-solid fa-user-doctor text-indigo-400 mr-1.5"></i> Tratamiento médico/psicológico</div>
+                            <div class="bg-slate-900/80 p-2 rounded border border-slate-700"><i class="fa-solid fa-gun text-indigo-400 mr-1.5"></i> Prohibición de portar armas</div>
+                            <div class="bg-slate-900/80 p-2 rounded border border-slate-700"><i class="fa-solid fa-car-burst text-indigo-400 mr-1.5"></i> Prohibición de conducir vehículos</div>
+                        </div>
+                    `,
+                    footer: "Las medidas se adaptan a las circunstancias específicas del caso."
+                },
+                {
+                    id: "spp-plazo",
+                    category: "Temporalidad",
+                    title: "Plazo de Prueba y Suspensión",
+                    article: "Art. 37 y 39",
+                    icon: "fa-calendar-days",
+                    summary: "Límite máximo de 6 años para el periodo de prueba y reglas de suspensión temporal.",
+                    details: `
+                        <div class="space-y-3">
+                            <div class="bg-slate-900 p-3 rounded-lg border border-slate-700">
+                                <span class="text-xs font-bold text-indigo-400 block mb-1">PLAZO MÁXIMO DE PRUEBA (Art. 37)</span>
+                                <p class="text-xs text-slate-300">El período fijado prudencialmente por el Juez <strong>no podrá exceder de seis (6) años</strong>.</p>
+                            </div>
+                            <div class="bg-slate-900 p-3 rounded-lg border border-slate-700">
+                                <span class="text-xs font-bold text-amber-400 block mb-1">SUSPENSIÓN DEL CÓMPUTO (Art. 39)</span>
+                                <p class="text-xs text-slate-300">El cómputo del plazo de prueba se suspende en el evento de que el imputado sea privado de libertad en el marco de otro proceso penal.</p>
+                            </div>
+                        </div>
+                    `,
+                    footer: "Al concluir el plazo sin faltas, el Juez sobresee definitivamente la causa."
+                },
+                {
+                    id: "spp-revocacion",
+                    category: "Efectos y Revocatoria",
+                    title: "Causales de Revocación de la Medida",
+                    article: "Art. 36 y 38",
+                    icon: "fa-triangle-exclamation",
+                    summary: "Consecuencias por incumplimiento o comisión de nuevos delitos.",
+                    details: `
+                        <p class="font-semibold text-rose-300 text-xs mb-2 uppercase tracking-wide">La suspensión se revocará si el imputado:</p>
+                        <ul class="space-y-2 text-xs">
+                            <li class="bg-rose-950/30 p-2.5 rounded-lg border border-rose-500/20 text-rose-100">
+                                <i class="fa-solid fa-xmark text-rose-400 mr-1"></i> Incumple injustificadamente las reglas de conducta impuestas.
+                            </li>
+                            <li class="bg-rose-950/30 p-2.5 rounded-lg border border-rose-500/20 text-rose-100">
+                                <i class="fa-solid fa-xmark text-rose-400 mr-1"></i> Incumple de manera injustificada los compromisos de reparación del daño.
+                            </li>
+                            <li class="bg-rose-950/30 p-2.5 rounded-lg border border-rose-500/20 text-rose-100">
+                                <i class="fa-solid fa-xmark text-rose-400 mr-1"></i> Es condenado mediante sentencia firme por la comisión de un nuevo delito.
+                            </li>
+                        </ul>
+                        <div class="mt-3 p-2.5 bg-slate-900 rounded-lg text-xs text-slate-400">
+                            <strong>Nota Clave (Art. 36):</strong> En caso de revocación, la eventual admisión de los hechos realizada por el imputado para acceder a la medida carecerá de todo valor probatorio.
+                        </div>
+                    `,
+                    footer: "La revocación reanuda el curso ordinario del proceso penal."
+                }
+            ]
+        };
+
+        let currentSection = 'co';
+        let activeNodeId = 'co-concepto';
+
+        // Function to switch main section tabs
+        function switchSection(section) {
+            currentSection = section;
+            const btnCo = document.getElementById('tab-co');
+            const btnSpp = document.getElementById('tab-spp');
+
+            if (section === 'co') {
+                btnCo.className = "px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center space-x-2 bg-indigo-600 text-white shadow-md";
+                btnSpp.className = "px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-400 hover:text-white transition-all duration-200 flex items-center space-x-2";
+                activeNodeId = 'co-concepto';
+            } else {
+                btnSpp.className = "px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center space-x-2 bg-indigo-600 text-white shadow-md";
+                btnCo.className = "px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-400 hover:text-white transition-all duration-200 flex items-center space-x-2";
+                activeNodeId = 'spp-concepto';
+            }
+
+            renderNodes();
+            selectNode(activeNodeId);
+        }
+
+        // Render interactive cards/nodes
+        function renderNodes(filterQuery = '') {
+            const container = document.getElementById('nodesContainer');
+            container.innerHTML = '';
+
+            const list = data[currentSection];
+            const filtered = list.filter(item => 
+                item.title.toLowerCase().includes(filterQuery.toLowerCase()) ||
+                item.article.toLowerCase().includes(filterQuery.toLowerCase()) ||
+                item.summary.toLowerCase().includes(filterQuery.toLowerCase()) ||
+                item.category.toLowerCase().includes(filterQuery.toLowerCase())
+            );
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full py-12 text-center text-slate-500">
+                        <i class="fa-solid fa-folder-open text-3xl mb-2"></i>
+                        <p class="text-sm">No se encontraron conceptos para tu búsqueda.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach(item => {
+                const isActive = item.id === activeNodeId;
+                const card = document.createElement('div');
+                card.onclick = () => selectNode(item.id);
+                card.className = `cursor-pointer transition-all duration-200 rounded-2xl p-4 border flex flex-col justify-between ${
+                    isActive 
+                    ? 'bg-slate-800 border-indigo-500 ring-2 ring-indigo-500/50 shadow-lg shadow-indigo-500/10' 
+                    : 'bg-slate-800/40 border-slate-700/60 hover:bg-slate-800/70 hover:border-slate-600'
+                }`;
+
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded ${
+                                isActive ? 'bg-indigo-500/20 text-indigo-300' : 'bg-slate-700/50 text-slate-400'
+                            }">${item.category}</span>
+                            <span class="text-xs font-semibold text-indigo-400">${item.article}</span>
+                        </div>
+                        <div class="flex items-center space-x-2.5 mb-2">
+                            <i class="fa-solid ${item.icon} text-lg ${isActive ? 'text-indigo-400' : 'text-slate-400'}"></i>
+                            <h3 class="font-bold text-sm sm:text-base text-white">${item.title}</h3>
+                        </div>
+                        <p class="text-xs text-slate-400 line-clamp-2">${item.summary}</p>
+                    </div>
+                    <div class="mt-3 pt-2 border-t border-slate-700/40 flex items-center justify-between text-[11px] text-slate-400">
+                        <span>Ver detalles</span>
+                        <i class="fa-solid fa-arrow-right text-indigo-400"></i>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        // Display node in Detail Inspector
+        function selectNode(id) {
+            activeNodeId = id;
+            const item = data[currentSection].find(x => x.id === id);
+            if (!item) return;
+
+            const categoryEl = document.getElementById('detailCategory');
+            if (categoryEl) categoryEl.innerText = item.category;
+
+            const articleEl = document.getElementById('detailArticle');
+            if (articleEl) articleEl.innerText = item.article;
+
+            const iconEl = document.getElementById('detailIcon');
+            if (iconEl) iconEl.innerHTML = `<i class="fa-solid ${item.icon}"></i>`;
+
+            const titleEl = document.getElementById('detailTitle');
+            if (titleEl) titleEl.innerText = item.title;
+
+            const contentEl = document.getElementById('detailContent');
+            if (contentEl) contentEl.innerHTML = item.details;
+            
+            const footerEl = document.getElementById('detailFooter');
+            if (footerEl) {
+                footerEl.innerHTML = `
+                    <div class="flex items-start space-x-3">
+                        <i class="fa-solid fa-shield-halved text-indigo-400 mt-1"></i>
+                        <p class="text-xs text-slate-300 leading-relaxed">
+                            ${item.footer}
+                        </p>
+                    </div>
+                `;
+            }
+
+            renderNodes(document.getElementById('searchInput').value);
+        }
+
+        // Live Search Filter
+        function filterNodes() {
+            const query = document.getElementById('searchInput').value;
+            renderNodes(query);
+        }
+
+        // Initialize App on Load
+        window.onload = function() {
+            renderNodes();
+            selectNode(activeNodeId);
+        };
+    </script>
+</body>
+</html>
